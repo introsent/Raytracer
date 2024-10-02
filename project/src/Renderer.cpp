@@ -36,12 +36,15 @@ void Renderer::Render(Scene* pScene) const
 			//float gradient = px / static_cast<float>(m_Width);
 			//gradient += py / static_cast<float>(m_Width);
 			//gradient /= 2.0f;
+			float FOV{ tan(camera.fovAngle * (PI / 180.f) / 2.f) };
 
-			Vector3 rayDirection{ (2 * (px + 0.5f) / m_Width - 1) * aspectRatio,   1 - 2 * (py + 0.5f) / m_Height, 1.f };
-
+			Vector3 rayDirection{ (2 * (px + 0.5f) / m_Width - 1) * aspectRatio * FOV ,   (1 - 2 * (py + 0.5f) / m_Height) * FOV, 1.f };
+		
 			rayDirection.Normalize();
 
-			Ray viewRay{ { 0, 0, 0 }, rayDirection };
+			const Matrix cameraToWorld = camera.CalculateCameraToWorld();
+
+			Ray viewRay{ camera.origin, cameraToWorld.TransformVector(rayDirection) };
 			
 			ColorRGB finalColor{  };
 

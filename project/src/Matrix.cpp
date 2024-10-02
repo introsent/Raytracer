@@ -103,9 +103,7 @@ namespace dae {
 
 	Matrix Matrix::CreateTranslation(float x, float y, float z)
 	{
-		//todo W2
-		throw std::runtime_error("Not Implemented Yet");
-		return {};
+		return CreateTranslation(Vector3(x, y, z));
 	}
 
 	Matrix Matrix::CreateTranslation(const Vector3& t)
@@ -115,30 +113,31 @@ namespace dae {
 
 	Matrix Matrix::CreateRotationX(float pitch)
 	{
-		//todo W2
-		throw std::runtime_error("Not Implemented Yet");
-		return {};
+		return Matrix::Transpose({Vector4(1.f, 0.f, 0.f, 0.f), 
+			Vector4(0.f, cos(pitch), -sin(pitch), 0.f), 
+			Vector4(0.f, sin(pitch), cos(pitch), 0.f), 
+			Vector4(0.f, 0.f, 0.f, 1.f)});
 	}
 
 	Matrix Matrix::CreateRotationY(float yaw)
 	{
-		//todo W2
-		throw std::runtime_error("Not Implemented Yet");
-		return {};
+		return Matrix::Transpose({ Vector4(cos(yaw), 0.f, sin(yaw), 0.f),
+			Vector4(0.f, 1.f, 0.f, 0.f),
+			Vector4(-sin(yaw), 0.f, cos(yaw), 0.f),
+			Vector4(0.f, 0.f, 0.f, 1.f) });
 	}
 
 	Matrix Matrix::CreateRotationZ(float roll)
 	{
-		//todo W2
-		throw std::runtime_error("Not Implemented Yet");
-		return {};
+		return Matrix::Transpose({ Vector4(cos(roll), sin(roll), 0.f, 0.f),
+			Vector4(sin(roll), cos(roll), 0.f, 0.f),
+			Vector4(0.f, 0.f, 1.f, 0.f),
+			Vector4(0.f, 0.f, 0.f, 1.f) });
 	}
 
 	Matrix Matrix::CreateRotation(const Vector3& r)
 	{
-		//todo W2
-		throw std::runtime_error("Not Implemented Yet");
-		return {};
+		return Matrix { CreateRotationX(r.x) * CreateRotationY(r.y) * CreateRotationZ(r.z) };
 	}
 
 	Matrix Matrix::CreateRotation(float pitch, float yaw, float roll)
@@ -148,9 +147,8 @@ namespace dae {
 
 	Matrix Matrix::CreateScale(float sx, float sy, float sz)
 	{
-		//todo W2
-		throw std::runtime_error("Not Implemented Yet");
-		return {};
+
+		return Matrix::Transpose({ Vector4(sx, 0.f, 0.f, 0.f), Vector4(0.f, sy, 0.f, 0.f), Vector4(0.f, 0.f, sz, 0.f), Vector4(0.f, 0.f, 0.f, 1.f) });
 	}
 
 	Matrix Matrix::CreateScale(const Vector3& s)
