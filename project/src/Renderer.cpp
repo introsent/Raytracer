@@ -29,6 +29,8 @@ void Renderer::Render(Scene* pScene) const
 
 	float aspectRatio = float(m_Width) / m_Height;
 
+
+
 	for (int px{}; px < m_Width; ++px)
 	{
 		for (int py{}; py < m_Height; ++py)
@@ -50,20 +52,46 @@ void Renderer::Render(Scene* pScene) const
 
 			HitRecord closestHit{ };
 
-			//Sphere testSphere{ {0.f, 0.f, 100.f}, 50.f, 0 };
 
-			//GeometryUtils::HitTest_Sphere(testSphere, viewRay, closestHit);
+			//Sphere testSphere{ {0.f, 0.f, 100.f}, 50.f, 0 };
 
 			pScene->GetClosestHit(viewRay, closestHit);
 
 			//Plane testPlane{ {0.f, -50.f, 0.f}, {0.f, 1.f, 0.f}, 0 };
 
-			//GeometryUtils::HitTest_Plane(testPlane, viewRay, closestHit);
+			//GeometryUtils::HitTest_Sphere(pScene->GetSphereGeometries(), viewRay, closestHit);
 
 			if (closestHit.didHit)
 			{
+				//finalColor = materials[closestHit.materialIndex]->Shade();
+				for (const Light& lightPtr : lights)
+				{
+					float distanceFromHitToLight;
 
-				finalColor = materials[closestHit.materialIndex]->Shade();
+					Vector3 lightDirection{ LightUtils::GetDirectionToLight(lightPtr, closestHit.origin) };
+					distanceFromHitToLight = lightDirection.Magnitude();
+					lightDirection.Normalize();
+
+					if (m_ShadowsEnabled)
+					{
+						if (pScene->DoesHit(Ray(closestHit.origin, lightDirection, 0.0001f, distanceFromHitToLight))) continue;
+					}
+
+					float cosOfAngle{ Vector3::Dot(closestHit.normal, lightDirection) };
+					if (cosOfAngle < 0) continue;
+					
+				
+					//finalColor = ColorRGB(cosOfAngle, cosOfAngle, cosOfAngle);
+					Vector3 hitToCameraDirection = (closestHit.origin, camera.origin).Normalized();
+
+					ColorRGB brdf{materials[closestHit.materialIndex]->Shade(closestHit, lightDirection, hitToCameraDirection)};
+
+
+					finalColor += cosOfAngle * LightUtils::GetRadiance(lightPtr, closestHit.origin) * brdf  ;
+
+					
+				}
+				
 
 				//const float scaled_t = closestHit.t / 500.f ;
 				//finalColor = { scaled_t, scaled_t, scaled_t };
@@ -86,4 +114,23 @@ void Renderer::Render(Scene* pScene) const
 bool Renderer::SaveBufferToImage() const
 {
 	return SDL_SaveBMP(m_pBuffer, "RayTracing_Buffer.bmp");
+}
+
+void Renderer::CycleLightingMode()
+{
+	switch (m_CurrentLightingMode)
+	{
+	case LightingMode::Combined:
+		m_CurrentLightingMode = LightingMode::ObservedArea;
+		break;
+	case LightingMode::ObservedArea:
+		m_CurrentLightingMode = LightingMode::Radiance;
+		break;
+	case LightingMode::Radiance:
+		m_CurrentLightingMode = LightingMode::BRDF;
+		break;
+	case LightingMode::BRDF:
+		m_CurrentLightingMode = LightingMode::Combined;
+		break;
+	}
 }

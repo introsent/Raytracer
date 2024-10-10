@@ -30,14 +30,18 @@ namespace dae
 					t = (-B + sqrtf(D)) / (2 * A);
 				}
 
-
-				hitRecord.didHit = true;
-				hitRecord.materialIndex = sphere.materialIndex;
-				hitRecord.t = t;
-				hitRecord.origin = Vector3{ ray.origin + hitRecord.t * ray.direction };
-				hitRecord.normal = (hitRecord.origin - sphere.origin ).Normalized();
-				return true;
-
+				if (t >= ray.min && t < ray.max)
+				{
+					if (ignoreHitRecord == false)
+					{
+						hitRecord.didHit = true;
+						hitRecord.materialIndex = sphere.materialIndex;
+						hitRecord.t = t;
+						hitRecord.origin = Vector3{ ray.origin + hitRecord.t * ray.direction };
+						hitRecord.normal = (hitRecord.origin - sphere.origin).Normalized();
+					}
+					return true;
+				}
 			}
 			hitRecord.didHit = false;
 			return false;
@@ -59,12 +63,17 @@ namespace dae
 
 			if ((t >= ray.min) && (t < ray.max))
 			{
-				hitRecord.t = t;
-				hitRecord.didHit = true;
-				hitRecord.materialIndex = plane.materialIndex;
-				hitRecord.normal = plane.normal;
-				hitRecord.origin = ray.origin + hitRecord.t * ray.direction;
+				if (ignoreHitRecord == false)
+				{
+					hitRecord.t = t;
+					hitRecord.didHit = true;
+					hitRecord.materialIndex = plane.materialIndex;
+					hitRecord.normal = plane.normal;
+					hitRecord.origin = ray.origin + hitRecord.t * ray.direction;
+				}
 				return true;
+				
+	
 			}
 			hitRecord.didHit = false;
 			return false;
@@ -113,16 +122,26 @@ namespace dae
 		inline Vector3 GetDirectionToLight(const Light& light, const Vector3 origin)
 		{
 			//todo W3
-			throw std::runtime_error("Not Implemented Yet");
-			return {};
+			//throw std::runtime_error("Not Implemented Yet");
+			return Vector3(origin, light.origin);
 		}
 
 		inline ColorRGB GetRadiance(const Light& light, const Vector3& target)
 		{
 			//todo W3
-			throw std::runtime_error("Not Implemented Yet");
-			return {};
-		}
+			if (light.type == LightType::Point)
+			{
+
+				return light.color * (light.intensity / Vector3::Dot((light.origin - target), (light.origin - target)));
+			
+			}
+
+			if (light.type == LightType::Directional)
+			{
+				return light.color * light.intensity;
+			}
+			return ColorRGB{};
+		} 
 	}
 
 	namespace Utils

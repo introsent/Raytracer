@@ -59,9 +59,7 @@ namespace dae
 
 		ColorRGB Shade(const HitRecord& hitRecord = {}, const Vector3& l = {}, const Vector3& v = {}) override
 		{
-			//todo: W3
-			throw std::runtime_error("Not Implemented Yet");
-			return {};
+			return BRDF::Lambert(m_DiffuseReflectance, m_DiffuseColor);
 		}
 
 	private:
@@ -84,9 +82,7 @@ namespace dae
 
 		ColorRGB Shade(const HitRecord& hitRecord = {}, const Vector3& l = {}, const Vector3& v = {}) override
 		{
-			//todo: W3
-			throw std::runtime_error("Not Implemented Yet");
-			return {};
+			return BRDF::Lambert(m_DiffuseReflectance, m_DiffuseColor) + BRDF::Phong(m_SpecularReflectance, m_PhongExponent, l, -v, hitRecord.normal);
 		}
 
 	private:
@@ -109,9 +105,33 @@ namespace dae
 
 		ColorRGB Shade(const HitRecord& hitRecord = {}, const Vector3& l = {}, const Vector3& v = {}) override
 		{
-			//todo: W3
-			throw std::runtime_error("Not Implemented Yet");
-			return {};
+			auto f0 = m_Albedo;
+			if (m_Metalness == 0.f)
+			{
+				f0 = ColorRGB(0.04f, 0.04f, 0.04f);
+			}
+
+			auto h = Vector3(v + l) / Vector3(v + l).Magnitude();
+
+			const auto F = BRDF::FresnelFunction_Schlick(h, v, f0);
+			const auto D = BRDF::NormalDistribution_GGX(hitRecord.normal, h, m_Roughness);
+			const auto G = BRDF::GeometryFunction_Smith(hitRecord.normal, v, l, m_Roughness);
+
+
+			const auto CT = ColorRGB((D * F * G)) / (4 * Vector3::Dot(v, hitRecord.normal) * Vector3::Dot(l, hitRecord.normal));
+
+			auto kd = ColorRGB(1.f, 1.f, 1.f) - F;
+
+			if (m_Metalness == 1.0f)
+			{
+				kd = ColorRGB(0.f, 0.f, 0.f);
+			}
+
+			
+			auto finalColor = BRDF::Lambert(kd, m_Albedo) + CT;
+
+			return finalColor;
+			//return BRDF::Lambert(m_DiffuseReflectance, m_DiffuseColor);
 		}
 
 	private:

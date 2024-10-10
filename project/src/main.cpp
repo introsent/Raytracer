@@ -47,7 +47,7 @@ int main(int argc, char* args[])
 	const auto pTimer = new Timer();
 	const auto pRenderer = new Renderer(pWindow);
 
-	const auto pScene = new Scene_W2();
+	const auto pScene = new Scene_W3 ();
 	pScene->Initialize();
 
 	//Start loop
@@ -59,6 +59,8 @@ int main(int argc, char* args[])
 	float printTimer = 0.f;
 	bool isLooping = true;
 	bool takeScreenshot = false;
+	bool isShadowToogled = false;
+	bool isLightingModeToogled = false;
 	while (isLooping)
 	{
 		//--------- Get input events ---------
@@ -73,6 +75,14 @@ int main(int argc, char* args[])
 			case SDL_KEYUP:
 				if (e.key.keysym.scancode == SDL_SCANCODE_X)
 					takeScreenshot = true;
+				if (e.key.keysym.scancode == SDL_SCANCODE_F2)
+				{
+					isShadowToogled = true;
+				}
+				if (e.key.keysym.scancode == SDL_SCANCODE_F3)
+				{
+					isLightingModeToogled = true;
+				}
 				break;
 			}
 		}
@@ -100,6 +110,17 @@ int main(int argc, char* args[])
 			else
 				std::cout << "Something went wrong. Screenshot not saved!" << std::endl;
 			takeScreenshot = false;
+		}
+
+		if (isShadowToogled)
+		{
+			pRenderer->ToogleShadows();
+			isShadowToogled = false;
+		}
+		if (isLightingModeToogled)
+		{
+			pRenderer->CycleLightingMode();
+			isLightingModeToogled = false;
 		}
 	}
 	pTimer->Stop();

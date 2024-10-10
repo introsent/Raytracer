@@ -21,7 +21,7 @@ namespace dae
 		Vector3 origin{};
 		float fovAngle{ 90.f };
 
-		Vector3 forward{ 0.266f, -0.453f, 0.860f  };
+		Vector3 forward{ Vector3::UnitZ };
 		Vector3 up{ Vector3::UnitY };
 		Vector3 right{ Vector3::UnitX };
 
@@ -46,6 +46,9 @@ namespace dae
 		{
 			const float deltaTime = pTimer->GetElapsed();
 
+			Vector3 velocity { 10.f, 10.f, 10.f };
+			const float rotationVeloctiy{ 0.1f * PI / 180.0f};
+
 			//Keyboard Input
 			const uint8_t* pKeyboardState = SDL_GetKeyboardState(nullptr);
 
@@ -54,8 +57,32 @@ namespace dae
 			int mouseX{}, mouseY{};
 			const uint32_t mouseState = SDL_GetRelativeMouseState(&mouseX, &mouseY);
 
-			//todo: W2
-			//throw std::runtime_error("Not Implemented Yet");
+			if (pKeyboardState[SDL_SCANCODE_W]) origin += forward * velocity.z * deltaTime;
+			if (pKeyboardState[SDL_SCANCODE_S]) origin -= forward * velocity.z * deltaTime;
+			if (pKeyboardState[SDL_SCANCODE_A]) origin -= right * velocity.x * deltaTime;
+			if (pKeyboardState[SDL_SCANCODE_D]) origin += right * velocity.x * deltaTime;
+
+
+			bool leftButtonPressed = mouseState & SDL_BUTTON(SDL_BUTTON_LEFT);
+			bool rightButtonPressed = mouseState & SDL_BUTTON(SDL_BUTTON_RIGHT);
+
+			if (leftButtonPressed)
+			{
+				origin += forward * mouseY * deltaTime;
+				totalPitch += mouseX * rotationVeloctiy;
+			}
+			if (rightButtonPressed)
+			{
+				totalPitch += mouseX * rotationVeloctiy;
+				totalYaw += mouseY * rotationVeloctiy;
+			}
+
+			Matrix finalRotation;
+
+			finalRotation = finalRotation.CreateRotation(totalYaw, totalPitch, 0.f);
+			forward = finalRotation.TransformVector(Vector3::UnitZ);
+			forward.Normalize();
+		
 		}
 	};
 }
