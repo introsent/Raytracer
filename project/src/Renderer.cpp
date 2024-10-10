@@ -86,10 +86,24 @@ void Renderer::Render(Scene* pScene) const
 
 					ColorRGB brdf{materials[closestHit.materialIndex]->Shade(closestHit, lightDirection, hitToCameraDirection)};
 
+					if (m_CurrentLightingMode == LightingMode::ObservedArea)
+					{
+						finalColor += ColorRGB(cosOfAngle, cosOfAngle, cosOfAngle);
+					}
 
-					finalColor += cosOfAngle * LightUtils::GetRadiance(lightPtr, closestHit.origin) * brdf  ;
+					if (m_CurrentLightingMode == LightingMode::Radiance)
+					{
+						finalColor += LightUtils::GetRadiance(lightPtr, closestHit.origin);
+					}
 
-					
+					if (m_CurrentLightingMode == LightingMode::BRDF)
+					{
+						finalColor += brdf;
+					}
+					if (m_CurrentLightingMode == LightingMode::Combined)
+					{
+						finalColor += cosOfAngle * LightUtils::GetRadiance(lightPtr, closestHit.origin) * brdf;
+					}
 				}
 				
 
