@@ -131,7 +131,7 @@ namespace dae
 			auto finalColor = BRDF::Lambert(kd, m_Albedo) + CT;
 
 			return finalColor;
-			//return BRDF::Lambert(m_DiffuseReflectance, m_DiffuseColor);
+		
 		}
 
 	private:

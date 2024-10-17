@@ -31,10 +31,11 @@ namespace dae
 		 */
 		static ColorRGB Phong(float ks, float exp, const Vector3& l, const Vector3& v, const Vector3& n)
 		{
-			auto reflect{ l - 2 * (Vector3::Dot(n, l) * n) };
+			auto reflect{ Vector3::Reflect(l, n) };
 			auto cosOfAngle{ abs(Vector3::Dot(reflect, v)) };
 
 			auto specularReflection = ks * std::pow (cosOfAngle, exp);
+
 
 			ColorRGB specularColor = { specularReflection, specularReflection, specularReflection };
 			specularColor.MaxToOne();

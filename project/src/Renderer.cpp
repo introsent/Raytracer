@@ -27,6 +27,7 @@ void Renderer::Render(Scene* pScene) const
 	auto& materials = pScene->GetMaterials();
 	auto& lights = pScene->GetLights();
 
+
 	float aspectRatio = float(m_Width) / m_Height;
 
 
@@ -63,6 +64,7 @@ void Renderer::Render(Scene* pScene) const
 
 			if (closestHit.didHit)
 			{
+				
 				//finalColor = materials[closestHit.materialIndex]->Shade();
 				for (const Light& lightPtr : lights)
 				{
@@ -100,6 +102,7 @@ void Renderer::Render(Scene* pScene) const
 					{
 						finalColor += brdf;
 					}
+
 					if (m_CurrentLightingMode == LightingMode::Combined)
 					{
 						finalColor += cosOfAngle * LightUtils::GetRadiance(lightPtr, closestHit.origin) * brdf;

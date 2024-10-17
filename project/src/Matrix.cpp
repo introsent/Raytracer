@@ -113,26 +113,26 @@ namespace dae {
 
 	Matrix Matrix::CreateRotationX(float pitch)
 	{
-		return Matrix::Transpose({Vector4(1.f, 0.f, 0.f, 0.f), 
-			Vector4(0.f, cos(pitch), -sin(pitch), 0.f), 
-			Vector4(0.f, sin(pitch), cos(pitch), 0.f), 
-			Vector4(0.f, 0.f, 0.f, 1.f)});
+		return {Vector4(1.f, 0.f, 0.f, 0.f), 
+			Vector4(0.f, cos(pitch), sin(pitch), 0.f), 
+			Vector4(0.f, -sin(pitch), cos(pitch), 0.f), 
+			Vector4(0.f, 0.f, 0.f, 1.f)};
 	}
 
 	Matrix Matrix::CreateRotationY(float yaw)
 	{
-		return Matrix::Transpose({ Vector4(cos(yaw), 0.f, sin(yaw), 0.f),
+		return { Vector4(cos(yaw), 0.f, -sin(yaw), 0.f),
 			Vector4(0.f, 1.f, 0.f, 0.f),
-			Vector4(-sin(yaw), 0.f, cos(yaw), 0.f),
-			Vector4(0.f, 0.f, 0.f, 1.f) });
+			Vector4(sin(yaw), 0.f, cos(yaw), 0.f),
+			Vector4(0.f, 0.f, 0.f, 1.f) };
 	}
 
 	Matrix Matrix::CreateRotationZ(float roll)
 	{
-		return Matrix::Transpose({ Vector4(cos(roll), sin(roll), 0.f, 0.f),
-			Vector4(sin(roll), cos(roll), 0.f, 0.f),
+		return { Vector4(cos(roll), sin(roll), 0.f, 0.f),
+			Vector4(-sin(roll), cos(roll), 0.f, 0.f),
 			Vector4(0.f, 0.f, 1.f, 0.f),
-			Vector4(0.f, 0.f, 0.f, 1.f) });
+			Vector4(0.f, 0.f, 0.f, 1.f) };
 	}
 
 	Matrix Matrix::CreateRotation(const Vector3& r)
