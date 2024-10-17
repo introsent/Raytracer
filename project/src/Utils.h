@@ -169,16 +169,22 @@ namespace dae
 #pragma region TriangeMesh HitTest
 		inline bool HitTest_TriangleMesh(const TriangleMesh& mesh, const Ray& ray, HitRecord& hitRecord, bool ignoreHitRecord = false)
 		{
-		
+			HitRecord minHitRecord;
+
 			for (int inx = 0; inx < mesh.indices.size(); inx += 3)
 			{
 				auto newTriangle = Triangle(mesh.transformedPositions[mesh.indices[inx]], mesh.transformedPositions[mesh.indices[inx + 1]], mesh.transformedPositions[mesh.indices[inx + 2]], mesh.transformedNormals[inx / 3]);
 				newTriangle.cullMode = mesh.cullMode;
 				newTriangle.materialIndex = mesh.materialIndex;
-			
-				HitTest_Triangle(newTriangle, ray, hitRecord, ignoreHitRecord);
-			}
 
+				HitTest_Triangle(newTriangle, ray, hitRecord, ignoreHitRecord);
+				if (inx == 0 || (inx > 0 && hitRecord.t < minHitRecord.t))
+				{
+					minHitRecord = hitRecord;
+				}
+
+			}
+			hitRecord = minHitRecord;
 			return hitRecord.didHit;
 		}
 
