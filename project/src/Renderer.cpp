@@ -30,102 +30,91 @@ void Renderer::Render(Scene* pScene) const
 
 	float aspectRatio = float(m_Width) / m_Height;
 
+    float offsets[4][2] = {
+                {0.25f, 0.25f}, {0.75f, 0.25f},
+                {0.25f, 0.75f}, {0.75f, 0.75f}
+    };
 
+    int sampleCount = 4; // 4x supersampling (2x2 grid)
+    float FOV = tan(camera.fovAngle * (PI / 180.f) / 2.f);
 
-	for (int px{}; px < m_Width; ++px)
-	{
-		for (int py{}; py < m_Height; ++py)
-		{
-			//float gradient = px / static_cast<float>(m_Width);
-			//gradient += py / static_cast<float>(m_Width);
-			//gradient /= 2.0f;
-			float FOV{ tan(camera.fovAngle * (PI / 180.f) / 2.f) };
+    for (int px = 0; px < m_Width; ++px) {
+        for (int py = 0; py < m_Height; ++py) {
+            ColorRGB finalColor{ 0, 0, 0 }; // Initialize final color to accumulate samples
 
-			Vector3 rayDirection{ (2 * (px + 0.5f) / m_Width - 1) * aspectRatio * FOV ,   (1 - 2 * (py + 0.5f) / m_Height) * FOV, 1.f };
-		
-			rayDirection.Normalize();
+            for (int i = 0; i < sampleCount; ++i) {
+                float offsetX = offsets[i][0];
+                float offsetY = offsets[i][1];
 
-			const Matrix cameraToWorld = camera.CalculateCameraToWorld();
+                // Adjust ray direction with the offset for anti-aliasing
+                Vector3 rayDirection{
+                    (2 * (px + offsetX) / m_Width - 1) * aspectRatio * FOV,
+                    (1 - 2 * (py + offsetY) / m_Height) * FOV,
+                    1.0f
+                };
+                rayDirection.Normalize();
 
-			Ray viewRay{ camera.origin, cameraToWorld.TransformVector(rayDirection) };
-			
-			ColorRGB finalColor{  };
+                const Matrix cameraToWorld = camera.CalculateCameraToWorld();
+                Ray viewRay{ camera.origin, cameraToWorld.TransformVector(rayDirection) };
 
-			HitRecord closestHit{ };
+                ColorRGB sampleColor{ 0, 0, 0 };
+                HitRecord closestHit{};
 
+                pScene->GetClosestHit(viewRay, closestHit);
 
-			//Sphere testSphere{ {0.f, 0.f, 100.f}, 50.f, 0 };
+                if (closestHit.didHit) {
+                    for (const Light& lightPtr : lights) {
+                        float distanceFromHitToLight;
+                        Vector3 lightDirection = LightUtils::GetDirectionToLight(lightPtr, closestHit.origin);
+                        distanceFromHitToLight = lightDirection.Magnitude();
+                        lightDirection.Normalize();
 
-			pScene->GetClosestHit(viewRay, closestHit);
+                        if (m_ShadowsEnabled && pScene->DoesHit(Ray(closestHit.origin, lightDirection, 0.0001f, distanceFromHitToLight)))
+                            continue;
 
-			//Plane testPlane{ {0.f, -50.f, 0.f}, {0.f, 1.f, 0.f}, 0 };
+                        float cosOfAngle = Vector3::Dot(closestHit.normal, lightDirection);
+                        if (cosOfAngle < 0) continue;
 
-			//GeometryUtils::HitTest_Sphere(pScene->GetSphereGeometries(), viewRay, closestHit);
+                        Vector3 hitToCameraDirection = (camera.origin - closestHit.origin).Normalized();
+                        ColorRGB brdf = materials[closestHit.materialIndex]->Shade(closestHit, lightDirection, hitToCameraDirection);
 
-			if (closestHit.didHit)
-			{
-				
-				//finalColor = materials[closestHit.materialIndex]->Shade();
-				for (const Light& lightPtr : lights)
-				{
-					float distanceFromHitToLight;
+                        switch (m_CurrentLightingMode) {
+                        case LightingMode::ObservedArea:
+                            sampleColor += ColorRGB(cosOfAngle, cosOfAngle, cosOfAngle);
+                            break;
+                        case LightingMode::Radiance:
+                            sampleColor += LightUtils::GetRadiance(lightPtr, closestHit.origin);
+                            break;
+                        case LightingMode::BRDF:
+                            sampleColor += brdf;
+                            break;
+                        case LightingMode::Combined:
+                            sampleColor += cosOfAngle * LightUtils::GetRadiance(lightPtr, closestHit.origin) * brdf;
+                            break;
+                        }
+                    }
+                }
 
-					Vector3 lightDirection{ LightUtils::GetDirectionToLight(lightPtr, closestHit.origin) };
-					distanceFromHitToLight = lightDirection.Magnitude();
-					lightDirection.Normalize();
+                sampleColor.MaxToOne();
+                finalColor += sampleColor; // Accumulate sample colors
+            }
 
-					if (m_ShadowsEnabled)
-					{
-						if (pScene->DoesHit(Ray(closestHit.origin, lightDirection, 0.0001f, distanceFromHitToLight))) continue;
-					}
+            // Average the color over the samples
+            finalColor /= float(sampleCount);
 
-					float cosOfAngle{ Vector3::Dot(closestHit.normal, lightDirection) };
-					if (cosOfAngle < 0) continue;
-					
-				
-					//finalColor = ColorRGB(cosOfAngle, cosOfAngle, cosOfAngle);
-					Vector3 hitToCameraDirection = (closestHit.origin, camera.origin).Normalized();
+            // Convert final color to SDL format and update the pixel buffer
+            m_pBufferPixels[px + (py * m_Width)] = SDL_MapRGB(
+                m_pBuffer->format,
+                static_cast<uint8_t>(finalColor.r * 255),
+                static_cast<uint8_t>(finalColor.g * 255),
+                static_cast<uint8_t>(finalColor.b * 255)
+            );
+        }
+    }
 
-					ColorRGB brdf{materials[closestHit.materialIndex]->Shade(closestHit, lightDirection, hitToCameraDirection)};
+    // Update SDL Surface
+    SDL_UpdateWindowSurface(m_pWindow);
 
-					if (m_CurrentLightingMode == LightingMode::ObservedArea)
-					{
-						finalColor += ColorRGB(cosOfAngle, cosOfAngle, cosOfAngle);
-					}
-
-					if (m_CurrentLightingMode == LightingMode::Radiance)
-					{
-						finalColor += LightUtils::GetRadiance(lightPtr, closestHit.origin);
-					}
-
-					if (m_CurrentLightingMode == LightingMode::BRDF)
-					{
-						finalColor += brdf;
-					}
-
-					if (m_CurrentLightingMode == LightingMode::Combined)
-					{
-						finalColor += cosOfAngle * LightUtils::GetRadiance(lightPtr, closestHit.origin) * brdf;
-					}
-				}
-				
-
-				//const float scaled_t = closestHit.t / 500.f ;
-				//finalColor = { scaled_t, scaled_t, scaled_t };
-			}
-			//Update Color in Buffer
-			finalColor.MaxToOne();
-
-			m_pBufferPixels[px + (py * m_Width)] = SDL_MapRGB(m_pBuffer->format,
-				static_cast<uint8_t>(finalColor.r * 255),
-				static_cast<uint8_t>(finalColor.g * 255),
-				static_cast<uint8_t>(finalColor.b * 255));
-		}
-	}
-
-	//@END
-	//Update SDL Surface
-	SDL_UpdateWindowSurface(m_pWindow);
 }
 
 bool Renderer::SaveBufferToImage() const
