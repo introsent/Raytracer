@@ -47,7 +47,8 @@ int main(int argc, char* args[])
 	const auto pTimer = new Timer();
 	const auto pRenderer = new Renderer(pWindow);
 
-	const auto pScene = new Scene_W4_ReferenceScene();
+	Scene* pScene = new Scene_W4_BunnyScene();
+	bool isReferenceScene = true;
 	pScene->Initialize();
 
 	//Start loop
@@ -83,7 +84,27 @@ int main(int argc, char* args[])
 				{
 					isLightingModeToogled = true;
 				}
+				if (e.key.keysym.scancode == SDL_SCANCODE_SPACE)
+				{
+					if (isReferenceScene)
+					{
+						delete pScene;
+						pScene = new Scene_W4_BunnyScene();
+						pScene->Initialize();
+						isReferenceScene = false;
+						std::cout << "Switched to Bunny Scene!" << std::endl;
+					}
+					else
+					{
+						delete pScene;
+						pScene = new Scene_W4_ReferenceScene();
+						pScene->Initialize();
+						isReferenceScene = true;
+						std::cout << "Switched to Reference Scene!" << std::endl;
+					}
+				}
 				break;
+		
 			}
 		}
 
