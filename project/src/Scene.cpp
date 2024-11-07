@@ -411,6 +411,8 @@ namespace dae {
 		for (const auto m : pMeshes)
 		{
 			m->RotateY(yawAngle);
+
+			m->UpdateAABB();
 			m->UpdateTransforms();
 		}
 	}
@@ -441,6 +443,8 @@ namespace dae {
 
 		pMesh->RotateY(PI);
 		pMesh->Scale(Vector3(2.f, 2.f, 2.f));
+
+		pMesh->UpdateAABB();
 		pMesh->UpdateTransforms();
 
 		AddPointLight(Vector3{ 0.f, 5.f, 5.f }, 50.f, ColorRGB{ 1.f, .61f, .45f });  // BackLight
