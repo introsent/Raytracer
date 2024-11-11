@@ -3,3 +3,5 @@
 This project contains the start code for the raytracer being built in the first 5 courseweeks of Graphics Programming 1. 
 
 Each week further extensions are made to the raytracer to support objects, lighting, camera movement, ...
+
+Use SPACE to switch between Bunny and Reference scenes
