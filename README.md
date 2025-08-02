@@ -1,8 +1,8 @@
-# Raytracer Repository README
+# CPU Raytracer
 
 ## Overview
 
-This is a C implementation of a basic ray tracer, a type of global illumination rendering algorithm. The code is designed to simulate the physical properties of light and its interaction with 3D objects in a scene.
+This is a C++ implementation of a basic raytracer, a type of global illumination rendering algorithm. The code is designed to simulate the physical properties of light and its interaction with 3D objects in a scene.
 
 ## Features
 
